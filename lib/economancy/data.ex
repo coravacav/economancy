@@ -56,7 +56,7 @@ defmodule Economancy.Data do
            "player" => player
          } <- game_state_map,
          {:ok, phase} <- structure_phase(phase_map),
-         {:ok, players} <- structure_players(players) do
+         players <- structure_players(players) do
       {:ok, %GameState{day: day, phase: phase, shop: shop, players: players, player: player}}
     else
       {:error, reason} -> {:error, "Game State Structuring Failed: #{reason}"}
@@ -83,9 +83,9 @@ defmodule Economancy.Data do
   end
 
   defp structure_players(players) do
-    Enum.reduce_while(players, {:ok, []}, fn
-      %{"coins" => coins, "buys" => buys, "cards" => cards}, {:ok, acc} ->
-        with {:ok, cards} <- structure_cards(cards) do
+    Enum.reduce_while(players, [], fn
+      %{"coins" => coins, "buys" => buys, "cards" => cards}, acc ->
+        with cards <- structure_cards(cards) do
           {:cont, [%Player{coins: coins, buys: buys, cards: cards} | acc]}
         else
           {:error, reason} -> {:halt, {:error, "Player Structuring Failed: #{reason}"}}
@@ -97,7 +97,7 @@ defmodule Economancy.Data do
   end
 
   defp structure_cards(cards) do
-    Enum.reduce_while(cards, {:ok, []}, fn
+    Enum.reduce_while(cards, [], fn
       %{"name" => name, "uses" => uses}, acc ->
         {:cont, [%Card{name: name, uses: uses} | acc]}
 
